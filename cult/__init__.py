@@ -1,7 +1,7 @@
 from grub import SearchStore as _SearchStore
 from types import ModuleType
 from importlib import import_module
-from py2store import KvReader
+from py2store import KvReader, cached_keys
 
 
 # def list_sources():
@@ -20,7 +20,8 @@ def list_sources():
     return [x[:-3] for x in py_files]
 
 
-class SearchTexts:
+@cached_keys
+class SearchTexts(KvReader):
     def __iter__(self):
         yield from list_sources()
 
@@ -30,7 +31,6 @@ class SearchTexts:
 
 from dataclasses import dataclass
 from typing import Iterable
-
 
 # @dataclass
 # class Results:
@@ -47,6 +47,7 @@ from typing import Iterable
 #         # return f"Results(..., refs={self.refs.__repr__()})"
 
 _inf = float('infinity')
+
 
 # TODO: Use pattern/mixin to wrap existing mapping (verses)
 class SearchText(KvReader):
