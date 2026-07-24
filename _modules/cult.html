@@ -1,0 +1,223 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>cult &mdash; cult 0.0.3 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=9edc463e" />
+      <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=47de8214"></script>
+      <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+      <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+      <script src="../_static/toggleprompt.js?v=d7ede5d2"></script>
+      <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+      <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            cult
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/cult.html">cult</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/cult/sources.html">cult.sources</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/cult/sources/bible.html">cult.sources.bible</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/cult/sources/king_james_bible.html">cult.sources.king_james_bible</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/cult/sources/quaran.html">cult.sources.quaran</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../module_docs/cult/util.html">cult.util</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">cult</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Module code</a></li>
+      <li class="breadcrumb-item active">cult</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for cult</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;cult — a search engine over religious texts.</span>
+
+<span class="sd">Provides :class:`SearchTexts` (a mapping of source name -&gt; :class:`SearchText`)</span>
+<span class="sd">and :class:`SearchText`, which wraps a source&#39;s ``verses`` mapping with a</span>
+<span class="sd">:class:`grub.SearchStore` for semantic/text search over the verses.</span>
+
+<span class="sd">Available sources are discovered from :mod:`cult.sources` (e.g. ``bible``,</span>
+<span class="sd">``king_james_bible``, ``quaran``). Verse data is fetched lazily on first use.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">grub</span><span class="w"> </span><span class="kn">import</span> <span class="n">SearchStore</span> <span class="k">as</span> <span class="n">_SearchStore</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">types</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModuleType</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_module</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">py2store</span><span class="w"> </span><span class="kn">import</span> <span class="n">KvReader</span><span class="p">,</span> <span class="n">cached_keys</span>
+
+
+<span class="c1"># def list_sources():</span>
+<span class="c1">#     import cult.sources</span>
+<span class="c1">#</span>
+<span class="c1">#     return list(filter(lambda x: isinstance(x, ModuleType),</span>
+<span class="c1">#                        (getattr(cult.sources, x) for x in dir(cult.sources) if not x.startswith(&#39;_&#39;))))</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">list_sources</span><span class="p">():</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">cult.sources</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+    <span class="c1"># TODO: Find better way to do this!</span>
+    <span class="n">py_files</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.py&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;_&#39;</span><span class="p">),</span>
+                      <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">cult</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">__path__</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">py_files</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="SearchTexts">
+<a class="viewcode-back" href="../module_docs/cult.html#cult.SearchTexts">[docs]</a>
+<span class="nd">@cached_keys</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchTexts</span><span class="p">(</span><span class="n">KvReader</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="n">list_sources</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SearchText</span><span class="p">(</span><span class="n">source</span><span class="p">)</span></div>
+
+
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections.abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">Iterable</span>
+
+<span class="c1"># @dataclass</span>
+<span class="c1"># class Results:</span>
+<span class="c1">#     store: KvReader</span>
+<span class="c1">#     refs: Iterable</span>
+<span class="c1">#</span>
+<span class="c1">#     def print(self):</span>
+<span class="c1">#         for i, verse_ref in enumerate(self.refs, 1):</span>
+<span class="c1">#             verse_text = self.store[verse_ref]</span>
+<span class="c1">#             print(f&quot;{i}: {verse_ref}\n{verse_text}\n&quot;)</span>
+<span class="c1">#</span>
+<span class="c1">#     def __repr__(self):</span>
+<span class="c1">#         return self.refs.__repr__()</span>
+<span class="c1">#         # return f&quot;Results(..., refs={self.refs.__repr__()})&quot;</span>
+
+<span class="n">_inf</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;infinity&#39;</span><span class="p">)</span>
+
+
+<span class="c1"># TODO: Use pattern/mixin to wrap existing mapping (verses)</span>
+<div class="viewcode-block" id="SearchText">
+<a class="viewcode-back" href="../module_docs/cult.html#cult.SearchText">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">SearchText</span><span class="p">(</span><span class="n">KvReader</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">search_max</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="c1"># TODO: Better way to do this import thing?</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">source_module</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s1">&#39;cult.sources&#39;</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">source</span><span class="p">)</span>
+            <span class="n">verses</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">source_module</span><span class="p">,</span> <span class="s1">&#39;verses&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Don&#39;t know that source: </span><span class="si">{source}</span><span class="se">\n</span><span class="s2">Error was: </span><span class="si">{e}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">verses</span> <span class="o">=</span> <span class="n">verses</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">searcher</span> <span class="o">=</span> <span class="n">_SearchStore</span><span class="p">(</span><span class="n">verses</span><span class="p">,</span> <span class="n">n_neighbors</span><span class="o">=</span><span class="n">search_max</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_search_results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">last_search_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">searcher</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_search_results</span>
+        <span class="c1"># return Results(self.verses, self.last_search_results)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_verses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">max_verses</span><span class="o">=</span><span class="n">_inf</span><span class="p">):</span>
+        <span class="n">verse_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verses</span>  <span class="c1"># default</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">verse_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">x</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">verse_refs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_search_results</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">verse_refs</span> <span class="o">=</span> <span class="n">x</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">verse_ref</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">verse_refs</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="n">max_verses</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="n">verse_text</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">verses</span><span class="p">[</span><span class="n">verse_ref</span><span class="p">]</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">verse_ref</span><span class="si">}</span><span class="se">\n</span><span class="si">{</span><span class="n">verse_text</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">verses</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">verses</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">verses</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">verses</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,4 @@
+cult.sources.king_james_bible
+=============================
+.. automodule:: cult.sources.king_james_bible
+   :members:

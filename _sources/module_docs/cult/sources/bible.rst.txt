@@ -1,0 +1,4 @@
+cult.sources.bible
+==================
+.. automodule:: cult.sources.bible
+   :members:
