@@ -1,3 +1,13 @@
+"""cult — a search engine over religious texts.
+
+Provides :class:`SearchTexts` (a mapping of source name -> :class:`SearchText`)
+and :class:`SearchText`, which wraps a source's ``verses`` mapping with a
+:class:`grub.SearchStore` for semantic/text search over the verses.
+
+Available sources are discovered from :mod:`cult.sources` (e.g. ``bible``,
+``king_james_bible``, ``quaran``). Verse data is fetched lazily on first use.
+"""
+
 from grub import SearchStore as _SearchStore
 from types import ModuleType
 from importlib import import_module
