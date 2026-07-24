@@ -18,4 +18,3 @@ def get_url_contents(url):
 def get_url_and_return_py_json(url):
     """Fetch ``url`` and decode its contents as JSON into Python objects."""
     return json.loads(get_url_contents(url))
-

@@ -24,9 +24,12 @@ from py2store import KvReader, cached_keys
 def list_sources():
     import cult.sources
     import os
+
     # TODO: Find better way to do this!
-    py_files = filter(lambda x: x.endswith('.py') and not x.startswith('_'),
-                      os.listdir(cult.sources.__path__[0]))
+    py_files = filter(
+        lambda x: x.endswith(".py") and not x.startswith("_"),
+        os.listdir(cult.sources.__path__[0]),
+    )
     return [x[:-3] for x in py_files]
 
 
@@ -56,7 +59,7 @@ from collections.abc import Iterable
 #         return self.refs.__repr__()
 #         # return f"Results(..., refs={self.refs.__repr__()})"
 
-_inf = float('infinity')
+_inf = float("infinity")
 
 
 # TODO: Use pattern/mixin to wrap existing mapping (verses)
@@ -64,8 +67,8 @@ class SearchText(KvReader):
     def __init__(self, source, search_max=10):
         # TODO: Better way to do this import thing?
         try:
-            source_module = import_module('cult.sources' + '.' + source)
-            verses = getattr(source_module, 'verses')
+            source_module = import_module("cult.sources" + "." + source)
+            verses = getattr(source_module, "verses")
         except Exception as e:
             raise ValueError("Don't know that source: {source}\nError was: {e}")
 

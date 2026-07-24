@@ -25,7 +25,7 @@ list(search_texts)
 
 
 ```python
-bib = search_texts['bible']
+bib = search_texts["bible"]
 print(f"{len(bib)} verses\n")
 ```
 
@@ -34,7 +34,7 @@ print(f"{len(bib)} verses\n")
 
 
 ```python
-bib['John 1:1']
+bib["John 1:1"]
 ```
 
 
@@ -44,7 +44,7 @@ bib['John 1:1']
 
 
 ```python
-bib.search('search for words')
+bib.search("search for words")
 ```
 
 
@@ -58,7 +58,7 @@ bib.search('search for words')
 
 
 ```python
-bib.print_verses('search for words')
+bib.print_verses("search for words")
 ```
 
     1: Ecclesiastes 12:10
@@ -95,7 +95,7 @@ bib.print_verses('search for words')
 
 
 ```python
-qua = search_texts['quaran']
+qua = search_texts["quaran"]
 len(qua)
 ```
 
@@ -108,7 +108,7 @@ len(qua)
 
 
 ```python
-qua.print_verses('search for words')
+qua.print_verses("search for words")
 ```
 
     1: 24:26

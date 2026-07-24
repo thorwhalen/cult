@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cult"
-version = "0.0.3"
+version = "0.0.4"
 description = "Religious texts search engine"
 readme = "README.md"
 requires-python = ">=3.10"
